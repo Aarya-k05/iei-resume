@@ -217,7 +217,6 @@ if process_button:
                         'Journal Name': pub.get('journal', ''),
                         'Published Under / Publisher': pub.get('publisher', ''),
                         'Year of Publication': pub.get('year', ''),
-                        'Impact Factor': pub.get('impact', ''),
                         'Scopus Indexed': pub.get('scopus', ''),
                         'Source Resume': name_display,
                     }

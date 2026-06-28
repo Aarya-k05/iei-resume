@@ -66,7 +66,7 @@ def _write_pub_table(ws, publications: list, start_row: int):
     Write the publication data table starting at `start_row`.
     Columns: Sr No | Title of Paper | Journal Name |
              Published Under / Journal Details | Year of Publication |
-             Impact Factor | Scopus Index
+             Scopus Index
     """
     col_headers = [
         'Sr No',
@@ -74,7 +74,6 @@ def _write_pub_table(ws, publications: list, start_row: int):
         'Journal Name',
         'Published Under / Journal Details',
         'Year of Publication',
-        'Impact Factor',
         'Scopus Index',
     ]
 
@@ -95,7 +94,6 @@ def _write_pub_table(ws, publications: list, start_row: int):
             pub.get('Journal Name', ''),
             pub.get('Published Under / Publisher', ''),
             pub.get('Year of Publication', ''),
-            pub.get('Impact Factor', 'N/A'),
             pub.get('Scopus Indexed', 'Unknown'),
         ]
         for col_idx, value in enumerate(row_data, start=1):
@@ -105,7 +103,7 @@ def _write_pub_table(ws, publications: list, start_row: int):
             cell.border = _thin_border()
 
     # Set reasonable column widths
-    col_widths = [8, 45, 30, 35, 20, 15, 15]
+    col_widths = [8, 45, 30, 35, 20, 15]
     for col_idx, width in enumerate(col_widths, start=1):
         ws.column_dimensions[get_column_letter(col_idx)].width = width
 
