@@ -6,7 +6,7 @@ EMAIL_RE = re.compile(
 
 # Better phone regex
 PHONE_RE = re.compile(
-    r'(?:\+91[\-\s]?)?[6-9]\d{9}'
+    r'(?:\+91[\-\s]?)?[6-9]\d{9}|\+?\d{1,3}[\-\s]?\d{3}[\-\s]?\d{3}[\-\s]?\d{4}'
 )
 
 NAME_BLACKLIST = {
