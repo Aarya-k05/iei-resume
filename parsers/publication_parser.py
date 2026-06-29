@@ -3,7 +3,7 @@ import re
 YEAR_RE = re.compile(r'(19|20)\d{2}')
 
 # Patterns for detecting numbered or bulleted publication entries
-ENTRY_START_RE = re.compile(r'^[\d]+[\).\-](?:\s+|$)')
+ENTRY_START_RE = re.compile(r'^\d{1,2}[\).\-](?:\s+|$)')
 BULLET_START_RE = re.compile(r'^[\u2022\-\*](?:\s+|$)')
 
 # Patterns for extracting metadata from a publication string
@@ -163,10 +163,13 @@ def _group_entries(lines: list) -> list:
     entries = []
 
     for line in lines:
+        starts_continuation = bool(re.match(r'^(?:vol|volume|issue|no\.?|pp\.?|p\.?|page|pages|issn|isbn|doi|https?:\/\/|www\.)|^\d+\s*,\s*|^\d+\s*$', line, re.I))
         is_new = (
-            ENTRY_START_RE.match(line)
-            or BULLET_START_RE.match(line)
-            or (YEAR_RE.search(line) and len(line.split()) > 5)
+            not starts_continuation and (
+                ENTRY_START_RE.match(line)
+                or BULLET_START_RE.match(line)
+                or (YEAR_RE.search(line) and len(line.split()) > 5)
+            )
         )
         if is_new:
             if buffer:

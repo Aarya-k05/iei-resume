@@ -16,9 +16,11 @@ MONTH_NUM = r'(?:0?[1-9]|1[0-2])'
 DATE_WITH_MONTH_NUM = rf'(?:{MONTH_NUM}[/\-\'’]{YEAR_PATTERN})'
 DATE_YEAR_ONLY = r'(?:\b(?:19|20)\d{2}\b)'
 
-DATE_PATTERN = rf'\b(?:{DATE_WITH_MONTH_WORD}|{DATE_WITH_MONTH_NUM}|{DATE_YEAR_ONLY})'
+DATE_NUMERIC_3_PARTS = r'(?:\b\d{1,2}[/\-\. \t]+[0-1]?\d[/\-\. \t]+(?:(?:19|20)?\d{2})\b)'
+
+DATE_PATTERN = rf'\b(?:{DATE_NUMERIC_3_PARTS}|{DATE_WITH_MONTH_WORD}|{DATE_WITH_MONTH_NUM}|{DATE_YEAR_ONLY})'
 PRESENT_PATTERN = r'(?:present|till\s+date|till\s+now|to\s+date|current|ongoing|now|active)'
-DATE_PATTERN_END = rf'(?:{DATE_PATTERN}|(?:[\'’]?\b\d{{2}}\b)|{PRESENT_PATTERN})'
+DATE_PATTERN_END = rf'(?:{DATE_PATTERN}|(?:[\'’]?\b\d{{2}}\b(?![\/\-\.]\d))|{PRESENT_PATTERN})'
 
 SEPARATOR_PATTERN = r'(?:\s*(?:[\-\–\—\|]|to|till|until)\s*)'
 RANGE_PATTERN = re.compile(rf'({DATE_PATTERN}){SEPARATOR_PATTERN}({DATE_PATTERN_END})', re.IGNORECASE)
@@ -221,7 +223,7 @@ def _parse_date_with_ref(date_str: str, ref_year: int = None) -> datetime.dateti
     
     normalized = _normalize_and_resolve_date_string(date_str, ref_year)
     try:
-        return dateparser.parse(normalized, default=datetime.datetime(1900, 1, 1))
+        return dateparser.parse(normalized, dayfirst=True, default=datetime.datetime(1900, 1, 1))
     except Exception:
         return None
 
@@ -257,6 +259,8 @@ def parse_experience(text: str, full_text: str = "") -> dict:
             summary[k] = current_designation if 'designation' in k.lower() else (current_department if 'department' in k.lower() else current_organization)
         return res
 
+    if text:
+        text = re.sub(r'\b(to|till|until|from|since|and)(\d)', r'\1 \2', text, flags=re.I)
     raw_lines = [l.strip() for l in text.splitlines() if l.strip()]
     
     # Merge wrapped lines
@@ -266,15 +270,12 @@ def parse_experience(text: str, full_text: str = "") -> dict:
             lines.append(line)
             continue
         is_bullet = (
-            line.startswith(('●', '❖', '*', '-', '▪', '•', '', '✔', '▪', '■', '✦', '★', '·')) or
+            line.startswith(('●', '❖', '*', '-', '▪', '•', '', '✔', '▪', '■', '✦', '★', '·', '', '\uf0b7', '\uf0b8', '\u2022')) or
             re.match(r'^\d+[\.\)\-]', line) or
-            re.match(r'^\uf0d8', line)
+            re.match(r'^\uf0d8', line) or
+            re.match(r'^(?:worked|working|associated|served|employed|appointed|visiting|assistant|associate|professor|lecturer|teacher)\b', line, re.I)
         )
-        is_continuation = not is_bullet and (
-            line[0].islower() or
-            re.match(r'^\d+\s*(?:months?|years?)\b', line, re.I) or
-            re.match(r'^(?:19|20)\d{2}\b', line)
-        )
+        is_continuation = not is_bullet
         if is_continuation:
             lines[-1] = lines[-1] + " " + line
         else:
