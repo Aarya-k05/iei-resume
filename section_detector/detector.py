@@ -12,7 +12,7 @@ SECTIONS = [
 # Improved keyword map for academic CVs (variations included)
 KEYWORDS = {
     'education': ['education', 'educational', 'academic qualification', 'qualification', 'academic qualifications', 'educational qualification', 'academic profile'],
-    'experience': ['experience', 'professional experience', 'work experience', 'appointments held', 'employment history', 'service record'],
+    'experience': ['experience', 'professional experience', 'work experience', 'appointments held', 'employment history', 'service record', 'employment', 'present employment'],
     'fdp': ['fdp', 'faculty development', 'faculty development programme', 'faculty development program', 'short term training program', 'sttp', 'training', 'workshop'],
     'publications': ['publications', 'research publications', 'journal', 'paper', 'papers', 'conference', 'paper publications', 'journal publications', 'books', 'book', 'book chapter', 'book chapters', 'proceedings', 'conferences'],
     'projects': ['projects', 'project'],
@@ -131,12 +131,16 @@ def detect_sections(text: str) -> Dict[str, str]:
             for kw in kws:
                 # Use plural-safe word boundary check
                 if re.search(rf'\b{re.escape(kw)}s?\b', low):
+                    target_sec = sec
+                    if 'administrative' in low or 'administration' in low:
+                        target_sec = 'administrative_work'
+                        
                     if is_heading(line):
-                        current = sec
+                        current = target_sec
                         assigned = True
                         break
                     if not current and len(line.split()) <= 4:
-                        current = sec
+                        current = target_sec
                         assigned = True
                         break
             if assigned:
