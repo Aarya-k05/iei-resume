@@ -56,8 +56,10 @@ def looks_like_sentence(line: str) -> bool:
         if v in low:
             return True
     words = line.split()
-    lower_count = sum(1 for w in words if w and w[0].islower())
-    if lower_count >= max(1, len(words) // 2):
+    if len(words) <= 4:
+        return False
+    lower_count = sum(1 for w in words if w and w[0].islower() and w.lower() not in ['and', 'or', 'of', 'in', 'at', 'on', 'with', 'for', 'to', 'by'])
+    if lower_count >= max(2, len(words) // 2):
         return True
     return False
 
@@ -75,9 +77,7 @@ def is_heading(line: str) -> bool:
         return False
     if YEAR_RE.search(s):
         return False
-    if s.endswith('.'):
-        return False
-    if s.count(',') > 1:
+    if s.endswith('.') or s.endswith(',') or s.endswith(';') or s.endswith('&') or s.endswith('-') or s.endswith('–') or s.endswith('—') or s.endswith('(') or s.endswith(')'):
         return False
     if s.endswith(':'):
         return True
@@ -129,12 +129,13 @@ def detect_sections(text: str) -> Dict[str, str]:
         # First: keyword match anywhere in the line (strong signal)
         for sec, kws in KEYWORDS.items():
             for kw in kws:
-                if kw in low:
-                    if is_heading(line) or low.strip().startswith(kw) or len(line.split()) <= 6:
+                # Use plural-safe word boundary check
+                if re.search(rf'\b{re.escape(kw)}s?\b', low):
+                    if is_heading(line):
                         current = sec
                         assigned = True
                         break
-                    if not current:
+                    if not current and len(line.split()) <= 4:
                         current = sec
                         assigned = True
                         break

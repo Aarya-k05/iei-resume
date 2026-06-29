@@ -376,6 +376,12 @@ def parse_experience(text: str, full_text: str = "") -> dict:
         is_research = bool(RESEARCH_KEYWORDS.search(low_context))
         is_admin = bool(ADMIN_KEYWORDS.search(low_context))
         
+        # Avoid treating administrative academic placement/systems jobs as industry
+        is_academic_org = bool(re.search(r'\b(?:university|univ|college|institute|iit|nit|iiit|bits|school|board|convent|academy)\b', low_context))
+        if is_industry and is_academic_org:
+            if not re.search(r'\b(?:pvt|ltd|inc|company|corporation|industry|industries|corp\b|co\b)\b', low_context):
+                is_industry = False
+                
         if is_industry:
             if is_academic or is_research:
                 if not re.search(r'\b(?:pvt|ltd|inc|company|corporation|industry|industries)\b', low_context):
