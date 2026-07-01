@@ -6,7 +6,7 @@ EMAIL_RE = re.compile(
 
 # Better phone regex
 PHONE_RE = re.compile(
-    r'(?:\+91[\-\s]?)?[6-9]\d{9}'
+    r'(?:\+91[\-\s]?)?[6-9]\d{9}|\+?\d{1,3}[\-\s]?\d{3}[\-\s]?\d{3}[\-\s]?\d{4}'
 )
 
 NAME_BLACKLIST = {
@@ -168,6 +168,9 @@ def extract_name(text):
         if low in NAME_BLACKLIST:
             continue
 
+        if re.search(r'\b(?:position|post|apply|application|faculty|curriculum|vitae|resume|biodata|profile|cv|objective|career|address|contact|email|phone|mobile|website|personal|details|hobbies|languages|skills|qualification|qualifications|education|educational|university|college|institute|school|technology|dept|department|experience|experiences)\b', low):
+            continue
+
         if EMAIL_RE.search(line):
             continue
 
@@ -188,13 +191,16 @@ def extract_name(text):
             if cleaned:
                 return cleaned
 
-    # Then look for title-case names
+    # Then look for capitalized or uppercase names
 
-    for line in top_lines:
+    for line in top_lines[:15]:
 
         low = line.lower()
 
         if low in NAME_BLACKLIST:
+            continue
+
+        if re.search(r'\b(?:position|post|apply|application|faculty|curriculum|vitae|resume|biodata|profile|cv|objective|career|address|contact|email|phone|mobile|website|personal|details|hobbies|languages|skills|qualification|qualifications|education|educational|university|college|institute|school|technology|dept|department|experience|experiences)\b', low):
             continue
 
         if EMAIL_RE.search(line):
@@ -203,27 +209,23 @@ def extract_name(text):
         if PHONE_RE.search(line):
             continue
 
-        if any(ch.isdigit() for ch in line):
-            # Try cleaning first
-            cleaned = clean_name(line)
-            if cleaned and not any(ch.isdigit() for ch in cleaned):
-                words = cleaned.split()
-                if 2 <= len(words) <= 5 and all(w[:1].isupper() for w in words if w):
+        # Clean qualification suffixes (like B.E., M.E., Ph.D.) from line first
+        clean_line = re.sub(r'\b(?:B\.E\.|M\.E\.|Ph\.D\.|MISTE|M\.Tech|B\.Tech|MBA|MS|M\.S\.)\b.*$', '', line, flags=re.I)
+        clean_line = re.sub(r'[,|–\-]', '', clean_line).strip()
+        
+        if not clean_line:
+            continue
+
+        words = clean_line.split()
+
+        if len(words) < 1 or len(words) > 5:
+            continue
+
+        if all(w.isalpha() or '.' in w or '-' in w for w in words):
+            # Accept if clean_line is uppercase or all words are capitalized
+            if clean_line.isupper() or all(w[0].isupper() for w in words if w):
+                cleaned = clean_name(clean_line)
+                if cleaned and len(cleaned.split()) >= 1:
                     return cleaned
-            continue
-
-        words = line.split()
-
-        if len(words) < 2 or len(words) > 5:
-            continue
-
-        if all(
-            word[:1].isupper()
-            for word in words
-            if word
-        ):
-            cleaned = clean_name(line)
-            if cleaned:
-                return cleaned
 
     return ""

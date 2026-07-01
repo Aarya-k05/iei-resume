@@ -291,7 +291,7 @@ def run_evaluation(gold_dataset_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
             sections = detect_sections(text)
 
             # --- Bug #2 fix: parse experience exactly once and reuse the result ---
-            exp = parse_experience(sections.get('experience', ''))
+            exp = parse_experience(sections.get('experience', ''), full_text=text)
             summary = exp.get('summary', {})
 
             # --- Bug #3 fix: don't trust one key spelling. Try the common

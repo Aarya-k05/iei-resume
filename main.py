@@ -131,7 +131,7 @@ if process_button:
                 }
 
                 edu = parse_education(sections.get('education', ''))
-                exp = parse_experience(sections.get('experience', ''))
+                exp = parse_experience(sections.get('experience', ''), full_text=text)
                 pubs = parse_publications(sections.get('publications', ''))
 
                 row = {
@@ -214,11 +214,10 @@ if process_button:
                         'Department': exp.get('current_department', ''),
                         'Publication Type': pub.get('type', ''),
                         'Title of Paper': pub.get('title', '') if pub.get('title') else pub.get('raw', ''),
-                        'Journal Name': pub.get('journal', ''),
-                        'Published Under / Publisher': pub.get('publisher', ''),
+                        'Journal Name': pub.get('journal_name') if pub.get('journal_name') else pub.get('conference_name', ''),
+                        'Published Under / Publisher': pub.get('journal_details', ''),
                         'Year of Publication': pub.get('year', ''),
-                        'Impact Factor': pub.get('impact', ''),
-                        'Scopus Indexed': pub.get('scopus', ''),
+                        'Scopus Indexed': pub.get('scopus_indexed', 'Unknown'),
                         'Source Resume': name_display,
                     }
                     pub_rows.append(pub_row)
